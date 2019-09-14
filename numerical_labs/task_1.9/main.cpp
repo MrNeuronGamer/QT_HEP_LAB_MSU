@@ -1,7 +1,9 @@
 #include <iostream>
 #include <cmath>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 typedef unsigned int ui;
 
 
@@ -53,14 +55,14 @@ void fill_x(double* x)
 
 void direct_ins_sort(double* x, size_t Size)
 {
-    
+
 
     size_t min_ind = 0;
     for (size_t i = 0; i < Size; i++)
     {
         min_ind = i;
 
-        for (size_t j = i ; j < Size; j++)
+        for (size_t j = i; j < Size; j++)
             if (x[j] < x[min_ind]) min_ind = j;
 
         swap(x[i], x[min_ind]);
@@ -68,14 +70,140 @@ void direct_ins_sort(double* x, size_t Size)
 
     }
 
-    
+
+
+}
+
+double find_max(double* arr, size_t Size)
+{
+    double res = arr[0];
+
+    for (size_t i = 1; i < Size; i++)
+    {
+
+        if (arr[i] > res) res = arr[i];
+
+    }
+
+    return res;
+}
+
+void pop_heap(double* heap,size_t Size, double* dest,double max)
+{
+    double stopper = max;
+    *(dest) = heap[0];
+
+    size_t i = 0;
+    size_t target = 0;
+    i = (target << 1) + 1;
+    while (i < Size)
+    {
+
+        if (i + 1 == Size)
+        {
+
+            heap[target] = heap[i];
+            target = i;
+            
+
+        }
+
+        else
+        {
+
+            if (heap[i] < heap[i + 1])
+            {
+                heap[target] = heap[i];
+                target = i;
+            }
+
+            else
+            {
+                heap[target] = heap[i+1];
+                target = i+1;
+            }
+        }
+
+        i = (target << 1) + 1;
+
+    }
+    heap[target] = stopper;
+
+
+}
+
+void build_heap(double* arr, size_t Size)
+{
+
+    int target;
+    int i = Size - 1;
+
+    while (i > 0)
+    {
+
+        
+
+        target = ((i - 1) >> 1);
+        if (((i-1)>>1) !=  ((i-2)>>1) )
+        {
+            if(arr[target] > arr[i])
+                swap(arr[target] , arr[i]);
+            
+        }
+        else
+        {
+            if (arr[i] < arr[i -1])
+            {
+                if (arr[target] > arr[i])
+                    swap(arr[target], arr[i]);
+            }
+            else
+            {
+                if (arr[target] > arr[i-1])
+                    swap(arr[target], arr[i -1]);
+            }
+                
+
+
+        }
+
+        i = ((target - 1) << 1) + 2;
+    }
+
+
+
+}
+
+void heap_to_arr(double* arr, size_t Size)
+{
+
+    double* buff = new double[Size];
+    double max = find_max(arr, Size);
+
+    for (size_t i = 0; i < Size; i++)
+    {
+        pop_heap(arr, Size , buff + i, max);
+
+    }
+
+
+    for (size_t i = 0; i < Size; i++)
+    {
+        arr[i] = buff[i];
+
+    }
+
+
+
+    delete[] buff;
 
 }
 
 void heapsort(double* arr, size_t Size)
 {
 
-
+    build_heap(arr, Size);
+    heap_to_arr(arr, Size);
 
 }
 
@@ -101,9 +229,9 @@ void merge(double* a, size_t as, double* b, size_t bs)
             j++;
         }
 
-      
 
-   }
+
+    }
 
 
     if (i == as)
@@ -124,7 +252,7 @@ void merge(double* a, size_t as, double* b, size_t bs)
 
 
     delete[] res;
-    
+
 
 
 }
@@ -150,8 +278,40 @@ void Neuman_sort(double* x, size_t Size)
 
 int main()
 {
-
     
+    double *x, *y;
+    x = new double[N];
+    y = new double[N];
+
+    fill_x(x);
+    fill_x(y);
+
+    auto start = high_resolution_clock::now();
+    Neuman_sort(x, N);
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "Neuman sort has executed for :  " << duration.count() << " mcs" << endl;
+
+    delete[] x;
+
+    start = high_resolution_clock::now();
+    heapsort(y, N);
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    cout << "Heap sort has executed for :  " << duration.count() << " mcs" << endl;
+
+    for (int i = 0; i < 7; i++)
+        cout << y[i] << "  ";
+
+    delete[] y;
+   
+
+
+   
+
+
+    int a;
+    cin >> a;
 
     return 0;
 }
