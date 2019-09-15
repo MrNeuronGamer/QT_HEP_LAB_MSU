@@ -97,7 +97,7 @@ void pop_heap(double* heap,size_t Size, double* dest,double max)
         function writes the head of heap to a destination, pops head out and reconstructs the heap
         by filling vacant places got freed after head removing. The last vacant place gets filled
         with a maximum value met within the heap.
-        WARNING: does not change the heap's space structure for been designed for creating sorted array ONLY.
+        WARNING: does not change the heap's space structure for being designed for creating sorted array ONLY.
                 NEVER USE FOR REMOVING A HEAP'S HEAD ONLY! A HEAP'S SIZE WILL NOT GET CHANGED.
     */
     double stopper = max;
