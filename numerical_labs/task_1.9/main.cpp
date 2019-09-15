@@ -14,14 +14,16 @@ const size_t N = 33000000;
 
 void generate_ab(ui& a, ui& b)
 {
-
+    
+    // function generates a pair of a and b numbers for further "random" x[i] generation
+    
     a = a * 1664525 + 1013904223;
     b = b * 1664525 + 1013904223;
 }
 
 void generate_x(double& x_1, double& x_2)
 {
-
+    // using A B pair generates a pair of x[i]
     double s = 2;
     double u, v;
 
@@ -43,7 +45,7 @@ void generate_x(double& x_1, double& x_2)
 
 void fill_x(double* x)
 {
-
+    // function gets a pointer to array and fills it with random numbers
     for (size_t i = 0; i < N; i += 2)
     {
 
@@ -55,7 +57,7 @@ void fill_x(double* x)
 
 void direct_ins_sort(double* x, size_t Size)
 {
-
+    // function sorts an array with size equal to Size using a direct insertion method
 
     size_t min_ind = 0;
     for (size_t i = 0; i < Size; i++)
@@ -76,6 +78,7 @@ void direct_ins_sort(double* x, size_t Size)
 
 double find_max(double* arr, size_t Size)
 {
+    // function looks for a maximum value in an array
     double res = arr[0];
 
     for (size_t i = 1; i < Size; i++)
@@ -90,6 +93,13 @@ double find_max(double* arr, size_t Size)
 
 void pop_heap(double* heap,size_t Size, double* dest,double max)
 {
+    /*
+        function writes the head of heap to a destination, pops head out and reconstructs the heap
+        by filling vacant places got freed after head removing. The last vacant place gets filled
+        with a maximum value met within the heap.
+        WARNING: does not change the heap's space structure for been designed for creating sorted array ONLY.
+                NEVER USE FOR REMOVING A HEAP'S HEAD ONLY! A HEAP'S SIZE WILL NOT GET CHANGED.
+    */
     double stopper = max;
     *(dest) = heap[0];
 
@@ -134,7 +144,7 @@ void pop_heap(double* heap,size_t Size, double* dest,double max)
 
 void build_heap(double* arr, size_t Size)
 {
-
+    // Gets an array and reorganizes it for being a minimum-head heap.
     int target;
     int i = Size - 1;
 
@@ -176,7 +186,7 @@ void build_heap(double* arr, size_t Size)
 
 void heap_to_arr(double* arr, size_t Size)
 {
-
+    // Geats a heap and reorganizes it to a sorted "min to max" array
     double* buff = new double[Size];
     double max = find_max(arr, Size);
 
@@ -201,7 +211,7 @@ void heap_to_arr(double* arr, size_t Size)
 
 void heapsort(double* arr, size_t Size)
 {
-
+    // Gets an array as an input and sorts it using heap sorting method
     build_heap(arr, Size);
     heap_to_arr(arr, Size);
 
@@ -209,6 +219,12 @@ void heapsort(double* arr, size_t Size)
 
 void merge(double* a, size_t as, double* b, size_t bs)
 {
+    /*
+        Gets two  SORTED arrays as an input and merges it into one 
+        sorted array; result array will get written into the first array provided 
+    
+    */
+
     size_t rs = as + bs;
     double* res = new double[rs];
     size_t i = 0;
@@ -260,7 +276,7 @@ void merge(double* a, size_t as, double* b, size_t bs)
 void Neuman_sort(double* x, size_t Size)
 {
 
-
+    // Sorts the array provided using Neuman sorting method
     if (Size > 8)
     {
 
