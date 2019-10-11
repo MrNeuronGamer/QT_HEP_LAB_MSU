@@ -1,8 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <cmath>
 
 using namespace std;
+static int Epsi_global = 10000;
 
 class LE_System
 {
@@ -14,13 +16,15 @@ public:
     double*     solution;
 
             LE_System       (void(*fill_f), size_t size);               // creates a system of linear equations of size "size" using "fill_f" generating function; lhs an rhs get created; field Size == size
+            LE_System       ();
             ~LE_System      ();                                         // frees all the fields' memory and destroys object
     void    operator=       (const LE_System&);
     void    operator++      (int);
     void    FindSolution    ();
+    void    operator*       (double*);
 
 
-    friend ostream& operator<<(ostream&, const LE_System&);
+    friend ostream& operator<<(ostream&, LE_System&);
 
 
     // debug section:
@@ -36,17 +40,33 @@ private:
     void    SubtractLines   (size_t from, size_t what);                 // subtracts line "what" from line "from"
     void    SettleLine      (size_t line);                              // makes shure that any line under "line" gets subtracted with "line" and gets rid of a variable indexed as "line"
     void    ReduceBigNorms  ();                                         // makes sure that no line's norm is 10^2 times bigger comparing with average norm 
+    
 };
 
 
+static LE_System Test;
 
 int main()
 {
-    double arr[] = { 12,0,0,3,8,7,0,1 };
+    LE_System A;
+    
+    ofstream OUT;
+    OUT.open("results_LE.dat", ios_base::ate);
 
-    LE_System A(arr, 2);
-    A.printTables();
-    A.FindSolution();
+    for (size_t i = 0 ;i < 10; i++)
+    {
+
+        A.FindSolution();
+        
+        OUT << A;
+        A++;
+        cout << " iteration :: " << i << "\n";
+
+    }
+
+   
+
+    OUT.close();
 
 
 
@@ -54,7 +74,37 @@ int main()
 }
 
 
+ostream& operator<<(ostream& out, LE_System& A)
+{
 
+    double E_1 = 0;
+    double E_2 = 0;
+    double x = 0;
+
+
+    for (size_t i = 0; i < A.Size; i++)
+    {
+        E_1 += (A.solution[i] - x)*(A.solution[i] - x);
+        
+        x += 0.001;
+    }   
+    E_1 = sqrt(E_1);
+
+
+    Test*A.solution;
+
+    for (size_t i = 0; i < A.Size; i++)
+    {
+        E_2 += (A.solution[i] - A.rhs[i])*(A.solution[i] - A.rhs[i]);
+       
+    }
+
+    E_2 = sqrt(E_2);
+
+    out << E_1 << "     :::     " << E_2 << "\n\n";
+    
+    return out;
+}
 
 void LE_System::SwapColumn(size_t start_pos, size_t target_pos)
 {   
@@ -115,7 +165,7 @@ void LE_System::SettleLine(size_t line)
     MultiplyLine(line, 1 / lhs_matrix[line + Size*line]);
     for (size_t l = line + 1; l < Size; l++)
     {
-        MultiplyLine(l, 1/lhs_matrix[line+Size*l]);
+        MultiplyLine(l, 1/lhs_matrix[line+Size*l]);        
         SubtractLines(l, line);
     }
 
@@ -173,14 +223,12 @@ void LE_System::ReduceBigNorms()
 void LE_System::FindSolution()
 {
 
-    ReduceBigNorms();           // get rid of big norms
-    
+    ReduceBigNorms();           // get rid of big norms    
     for (size_t i = 0; i < Size; i++)
     {
         SettleLine(i);           // triangulate
     }
-
-    printTables();              //check matrix view
+   
 
     for (size_t i = Size - 1; Size - i != Size+1; i--)
     {
@@ -190,17 +238,9 @@ void LE_System::FindSolution()
             solution[i] -= solution[j] * lhs_matrix[i*Size+j];
         }
     }
-
    
-
-    if (!CheckResult())
-        cout << "\nSmth gone wrong\n\n\n\n";
-    else cout << "\n\n All's fine Dude! ;) \n";
-
-    printTables();
-
-
-
+    cout <<"Solution is correct :  " <<  CheckResult(1e-8) << "    ";
+   
 }
 
 bool LE_System::CheckResult(double error ) const
@@ -220,6 +260,15 @@ bool LE_System::CheckResult(double error ) const
     return true;
 }
 
+void LE_System::operator++(int)
+{
+
+    for (size_t i = 0; i < Size; i++)
+        lhs_matrix[i*Size + i] += Epsi_global;
+        
+    Epsi_global = Epsi_global / 2;
+
+}
 
 LE_System::~LE_System()
 {
@@ -229,6 +278,52 @@ LE_System::~LE_System()
 
 }
 
+LE_System::LE_System()
+{
+
+    Size = 1001;
+    lhs_matrix = new double[Size*Size];
+    rhs = new double[Size];
+    solution = new double[Size];
+
+
+    double dx = 0.001;
+    double a = 0.765;
+    double x[1001];
+
+    for (size_t i = 0; i < Size; i++)
+        x[i] = i*dx;
+
+
+
+    auto c = [](size_t j)
+    {   
+        if (j == 0) return 1. / 3;
+        if (j == 1000) return 1. / 3;
+        if (j % 2 == 0) return 4. / 3;
+        return 2. / 3;
+    
+    };
+
+    auto g = [&a](double x)
+    {
+        return 0.5*log(1 + (1 - 2 * x) / (a*a + x*x)) + (x* (atan((1 - x) / a) + atan(x / a))) / (a);
+
+    };
+
+
+    for (size_t i = 0; i < Size; i++)
+    {
+        for (size_t j = 0; j < Size; j++)
+            lhs_matrix[i*Size + j] = dx*c(j) / ((x[i] - x[j])*(x[i] - x[j]) + a*a);
+
+        rhs[i] = g(x[i]);
+    }
+
+
+
+
+}
 
 
 
@@ -257,7 +352,30 @@ LE_System::LE_System(double* arr, size_t size)
 
 }
 
+void LE_System::operator*(double* b)
+{
 
+    double* buffer = new double[Size];
+
+
+    for (size_t i = 0; i < Size; i++)
+    {
+        buffer[i] = b[i];
+        b[i] = 0;
+    }
+
+    for (size_t i = 0; i < Size; i++)
+        for (size_t j = 0; j < Size; j++)
+        {
+            b[i] += buffer[j] * lhs_matrix[i*Size + j];            
+        }
+
+
+
+    delete[] buffer;
+
+
+}
 
 void LE_System::printTables() const
 {
