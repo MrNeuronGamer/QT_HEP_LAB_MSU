@@ -21,7 +21,7 @@ public:
     void    operator=       (const LE_System&);
     void    operator++      (int);
     void    FindSolution    ();
-    void    operator*       (double*);
+    void    operator*       (double*) const;
 
 
     friend ostream& operator<<(ostream&, LE_System&);
@@ -30,6 +30,7 @@ public:
     // debug section:
     void printTables() const;           // prints lhs and rhs 
     LE_System(double* Lines, size_t size);
+    void printSolRHS() const;
 
 private:
     void    SwapColumn      (size_t start_pos, size_t target_pos);      // swaps columns indexed by start_pos and target_pos
@@ -44,22 +45,24 @@ private:
 };
 
 
-static LE_System Test;
+ static  LE_System A_Z;
 
 int main()
 {
-    LE_System A;
-    
+    LE_System A,E;
+    A_Z++;
     ofstream OUT;
     OUT.open("results_LE.dat", ios_base::ate);
 
-    for (size_t i = 0 ;i < 10; i++)
+    for (size_t i = 0 ;i < 81; i++)
     {
-
-        A.FindSolution();
+        E++;
+        A = E;
         
+        A.FindSolution();
+               
         OUT << A;
-        A++;
+       
         cout << " iteration :: " << i << "\n";
 
     }
@@ -68,7 +71,27 @@ int main()
 
     OUT.close();
 
+    /*double arr[] = { 9,1,0,5,3,11,0,8 };
 
+
+    LE_System A(arr, 2), E;
+    E = A;
+
+    for (auto i : arr)
+    {
+        A = E;
+        A.printTables();
+        cout << endl;
+        A.FindSolution();
+        cout << endl;
+        A.printTables();
+        E++;
+
+    }
+
+    int debug;
+    cin >> debug;
+*/
 
     return 0;
 }
@@ -91,11 +114,12 @@ ostream& operator<<(ostream& out, LE_System& A)
     E_1 = sqrt(E_1);
 
 
-    Test*A.solution;
+    A_Z*A.solution;
+    A.printSolRHS();
 
     for (size_t i = 0; i < A.Size; i++)
     {
-        E_2 += (A.solution[i] - A.rhs[i])*(A.solution[i] - A.rhs[i]);
+        E_2 += (A.solution[i] - A_Z.rhs[i])*(A.solution[i] - A_Z.rhs[i]);
        
     }
 
@@ -223,14 +247,14 @@ void LE_System::ReduceBigNorms()
 void LE_System::FindSolution()
 {
 
-    ReduceBigNorms();           // get rid of big norms    
+   /* ReduceBigNorms();   */        // get rid of big norms    
     for (size_t i = 0; i < Size; i++)
     {
         SettleLine(i);           // triangulate
     }
    
 
-    for (size_t i = Size - 1; Size - i != Size+1; i--)
+    for (int i = Size - 1; Size - i != Size+1; i--)
     {
         solution[i] = rhs[i];
         for (size_t j = i + 1; j < Size; j++)
@@ -239,7 +263,7 @@ void LE_System::FindSolution()
         }
     }
    
-    cout <<"Solution is correct :  " <<  CheckResult(1e-8) << "    ";
+    cout <<"Solution is correct :  " <<  CheckResult(1e-14) << "    ";
    
 }
 
@@ -290,9 +314,9 @@ LE_System::LE_System()
     double dx = 0.001;
     double a = 0.765;
     double x[1001];
-
+    x[0] = 0;
     for (size_t i = 0; i < Size; i++)
-        x[i] = i*dx;
+        x[i] = x[i-1]+dx;
 
 
 
@@ -352,7 +376,7 @@ LE_System::LE_System(double* arr, size_t size)
 
 }
 
-void LE_System::operator*(double* b)
+void LE_System::operator*(double* k) const
 {
 
     double* buffer = new double[Size];
@@ -360,14 +384,14 @@ void LE_System::operator*(double* b)
 
     for (size_t i = 0; i < Size; i++)
     {
-        buffer[i] = b[i];
-        b[i] = 0;
+        buffer[i] = k[i];
+        k[i] = 0;
     }
 
     for (size_t i = 0; i < Size; i++)
         for (size_t j = 0; j < Size; j++)
         {
-            b[i] += buffer[j] * lhs_matrix[i*Size + j];            
+            k[i] += buffer[j] * lhs_matrix[i*Size + j];            
         }
 
 
@@ -391,4 +415,16 @@ void LE_System::printTables() const
     int c = 0;
     cin >> c;
     cout << "\n\n\n";
+}
+
+void LE_System::printSolRHS() const
+{
+
+    for (size_t i = 0; i < Size; i++)
+    {
+        cout << solution[i] << "   ::   " << A_Z.rhs[i] << endl;
+    }
+
+    int a;
+    cin >> a;
 }
